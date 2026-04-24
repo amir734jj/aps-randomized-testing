@@ -4,6 +4,7 @@
 
 import scala.collection.mutable.Buffer;
 import scala.collection.mutable.ArrayBuffer;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 object Debug {
   private var depth : Int = 0;
@@ -14,7 +15,7 @@ object Debug {
 
   def activate() : Unit = _active = true;
 
-  def indent() {
+  def indent(): Unit = {
     for (i <- 0 until depth)
       print(' ');
   }
@@ -43,15 +44,15 @@ object Debug {
   }
 
   def with_level(s : => String) : String =
-//    if (print_level <= 0) "#"
-//    else {
+    if (print_level <= 0) "#"
+    else {
       try {
-	print_level -= 1;
-	s
+        print_level -= 1;
+        s
       } finally {
-	print_level += 1;
+        print_level += 1;
       }
-//    }
+    }
 
 }
 
@@ -91,7 +92,7 @@ class I_TYPE[T](name : String) extends Module(name) with C_TYPE[T] {
       case t:Value => assert(t.myType == this)
     };
   def f_equal(x : T_Result, y : T_Result) : Boolean = f_node_equivalent(x,y);
-  def f_node_equivalent(x : T_Result, y : T_Result) : Boolean = x != null && y != null && x.equals(y);
+  def f_node_equivalent(x : T_Result, y : T_Result) : Boolean = x != null && y != null && x == y;
   def f_string(x : T_Result) : String = x.toString();
 }
 
@@ -145,7 +146,7 @@ trait C_PHYLUM[T_Result <: Node] extends C_TYPE[T_Result] {
 }
 
 class I_PHYLUM[T_Result <: Node](name : String)
-	 extends I_TYPE[T_Result](name) with C_PHYLUM[T_Result]
+  extends I_TYPE[T_Result](name) with C_PHYLUM[T_Result]
 {
   val v_identical = f_identical _;
   val v_object_id = f_object_id _;
@@ -172,7 +173,7 @@ class I_PHYLUM[T_Result <: Node](name : String)
 }
 
 abstract class T_PHYLUM(t_Result : C_PHYLUM[T_PHYLUM])
-extends Node(t_Result) { }
+  extends Node(t_Result) { }
 
 class M_PHYLUM(name : String) extends I_PHYLUM[T_PHYLUM](name)
 { }
@@ -193,7 +194,24 @@ object Evaluation {
   case class CyclicAttributeException(w : String) extends APSException("cyclic attribute: " + w) {}
   object StubError extends APSException("stub error") {}
 
-  import scala.collection.mutable.Stack;
+  class Stack[A](private var elems: List[A] = List.empty[A]) extends Iterable[A] {
+    def push(v: A): Stack[A] = {
+      elems = v :: elems;
+      this;
+    }
+
+    def pop(): A = {
+      if (elems.isEmpty) {
+        throw new NoSuchElementException("Empty Stack");
+      } else {
+        val popped = elems.head;
+        elems = elems.tail;
+        popped;
+      }
+    }
+
+    override def iterator: Iterator[A] = elems.iterator
+  }
 
   val pending : Stack[Evaluation[_,_]] = new Stack();
 }
@@ -208,7 +226,8 @@ class Evaluation[T_P, T_V](val anchor : T_P, val name : String)
 
   var status : EvalStatus = UNINITIALIZED;
   var value : ValueType = null.asInstanceOf[ValueType];
-  var checkForLateUpdate = true;  // Flag that can be overridden to prevent testing for TooLateError
+  // Flag that can be overridden to prevent testing for TooLateError
+  var checkForLateUpdate = true;
 
   def inCycle : CircularEvaluation[_,_] = null;
   def setInCycle(ce : CircularEvaluation[_,_]) : Unit = {
@@ -219,16 +238,16 @@ class Evaluation[T_P, T_V](val anchor : T_P, val name : String)
     status match {
       case CYCLE => detectedCycle
       case UNINITIALIZED | UNEVALUATED => {
-	status = CYCLE;
-	pending.push(this);
+        status = CYCLE;
+        pending.push(this);
         value = compute;
-	pending.pop();
-	if (inCycle != null) {
-	  evaluateCycle;
-	} else {
-	  status = EVALUATED;
-	}
-	value
+        pending.pop();
+        if (inCycle != null) {
+          evaluateCycle;
+        } else {
+          status = EVALUATED;
+        }
+        value
       }
       case _ => value
     }
@@ -252,8 +271,8 @@ class Evaluation[T_P, T_V](val anchor : T_P, val name : String)
 
   def set(v : ValueType) : Unit = {
     status match {
-    case EVALUATED => if (checkForLateUpdate) throw TooLateError;
-    case _ => ();
+      case EVALUATED => if (checkForLateUpdate) throw TooLateError else ();
+      case _ => ();
     }
     value = v;
     status = ASSIGNED;
@@ -264,23 +283,21 @@ class Evaluation[T_P, T_V](val anchor : T_P, val name : String)
   }
 
   def detectedCycle : ValueType = {
-    throw new CyclicAttributeException(anchor+"."+name);
+    throw new CyclicAttributeException(s"$anchor.$name");
   }
 
   def compute : ValueType = getDefault;
 
   def getDefault : ValueType = {
-    println("----------")
-    println(anchor)
-    throw new UndefinedAttributeException(anchor+"."+name);
+    throw new UndefinedAttributeException(s"$anchor.$name");
   };
 }
 
 class Attribute[T_P <: Node, T_V]
-               (val t_P : C_PHYLUM[T_P],
-		val t_V : Any, // unused
-		val name : String)
-extends Module("Attribute " + name)
+(val t_P : C_PHYLUM[T_P],
+ val t_V : Any, // unused
+ val name : String)
+  extends Module("Attribute " + name)
 {
   type NodeType = T_P;
   type ValueType = T_V;
@@ -299,9 +316,9 @@ extends Module("Attribute " + name)
   override def finish() : Unit = {
     if (!isComplete) {
       // We only demand values of rooted trees
-      // Otherwise "garbage" trees will cause problems 
+      // Otherwise "garbage" trees will cause problems
       for (n <- t_P.nodes) {
-	if (n.isRooted) get(n);
+        if (n.isRooted) get(n);
       }
     }
     super.finish();
@@ -313,7 +330,7 @@ extends Module("Attribute " + name)
     {
       val nn = n.myType.nodes(num);
       if (n != nn) {
-	println("Got " + n + "'s number as " + num + ", but the node with that number is " + nn);
+        println("Got " + n + "'s number as " + num + ", but the node with that number is " + nn);
       }
       assert (n == nn);
     }
@@ -333,7 +350,7 @@ extends Module("Attribute " + name)
   }
 
   def createEvaluation(anchor : NodeType) : Evaluation[NodeType,ValueType] = {
-    return new Evaluation(anchor, anchor + "." + name);
+    return new Evaluation(anchor, s"$anchor.$name");
   }
 }
 
@@ -389,8 +406,8 @@ class CircularHelper(var cycleLast : CircularEvaluation[_,_]) {
       Debug.out("Adding all from " + c.helper + " to cycle " + this);
       var p = c;
       while (p != null) {
-	Debug.out("  " + p.name);
-	p = p.cycleNext;
+        Debug.out("  " + p.name);
+        p = p.cycleNext;
       }
     }
     val other = c.helper;
@@ -465,21 +482,21 @@ trait CircularEvaluation[V_P, V_T] extends Evaluation[V_P,V_T] {
     if (cycleParent == this) {
       // we're in charge
       do {
-	helper.modified = false;
-	var c : CircularEvaluation[_,_] = this;
-	do {
-	  pending.push(c);
-	  c.recompute();
-	  pending.pop();
-	  if (cycleParent != this) return; // no longer our responsibility
-	  c = c.cycleNext;
-	} while (c != null);
+        helper.modified = false;
+        var c : CircularEvaluation[_,_] = this;
+        do {
+          pending.push(c);
+          c.recompute();
+          pending.pop();
+          if (cycleParent != this) return; // no longer our responsibility
+          c = c.cycleNext;
+        } while (c != null);
       } while (helper.modified);
       // now freeze all values:
       var c : CircularEvaluation[_,_] = this;
       do {
-	c.status = EVALUATED;
-	c = c.cycleNext;
+        c.status = EVALUATED;
+        c = c.cycleNext;
       } while (c != null);
     }
   }
@@ -488,7 +505,7 @@ trait CircularEvaluation[V_P, V_T] extends Evaluation[V_P,V_T] {
     if (!lattice.v_equal(value,newValue)) {
       inCycle.helper.modified = true;
       if (!lattice.v_compare(value,newValue)) {
-	throw new CyclicAttributeException("non-monotonic " + name);
+        throw new CyclicAttributeException("non-monotonic " + name);
       }
     }
   };
@@ -518,4 +535,45 @@ object P_AND {
   def unapply[T](x : T) : Option[(T,T)] = Some((x,x));
 }
 
+trait StaticCircularEvaluation[V_P, V_T] extends CircularEvaluation[V_P, V_T] {
+  def assign(v: ValueType, changed: AtomicBoolean): Unit = {
+    Debug.out(name + " := " + v);
+    this.set(v, changed)
+  }
+
+  def set(newValue: ValueType, changed: AtomicBoolean): Unit = {
+    val prevValue = value;
+    super.set(newValue);
+    if (prevValue != value) {
+      changed.set(true);
+    }
+  }
+
+  override def check(newValue: ValueType): Unit = {
+    if (value != null) {
+      if (!lattice.v_equal(value, newValue)) {
+        if (!lattice.v_compare(value, newValue)) {
+          throw new Evaluation.CyclicAttributeException("non-monotonic " + name);
+        }
+      }
+    }
+  }
+
+  // Needed to prevent TooLateError
+  checkForLateUpdate = false;
+}
+
+trait ChangeTrackingAttribute[T_P <: Node, T_V] {
+  this: Attribute[T_P, T_V] =>
+
+  def assign(n: T_P, v: T_V, changed: AtomicBoolean): Unit = {
+    Debug.begin(t_P.v_string(n) + "." + name + ":=" + v);
+    this.set(n, v, changed);
+    Debug.end();
+  }
+
+  def set(n: T_P, v: T_V, changed: AtomicBoolean): Unit = checkNode(n)
+    .asInstanceOf[StaticCircularEvaluation[T_P, T_V]]
+    .set(v, changed);
+}
 
