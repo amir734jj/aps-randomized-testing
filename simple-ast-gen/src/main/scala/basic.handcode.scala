@@ -1,14 +1,22 @@
 import Evaluation._;
 
 object basic_implicit {
+  type AtomicBoolean = java.util.concurrent.atomic.AtomicBoolean;
+
+  private object Conversions {
+    implicit def lazyToEager[T](f: (=>T, =>T) => T): (T, T) => T = (a: T, b: T) => f(a, b)
+  }
+
+  import Conversions._
+
   val t_Boolean = new M_BOOLEAN("Boolean");
   type T_Boolean = Boolean;
   val v_true:T_Boolean = true;
   val v_false:T_Boolean = false;
   val v_and = f_and _;
-  def f_and(v__23 : T_Boolean, v__24 : T_Boolean):T_Boolean = v__23 && v__24;
+  def f_and(v__23: => T_Boolean, v__24: => T_Boolean):T_Boolean = v__23 && v__24;
   val v_or = f_or _;
-  def f_or(v__25 : T_Boolean, v__26 : T_Boolean):T_Boolean = v__25 || v__26;
+  def f_or(v__25: => T_Boolean, v__26: => T_Boolean):T_Boolean = v__25 || v__26;
   val v_not = f_not _;
   def f_not(v__27 : T_Boolean):T_Boolean = !v__27;
 
@@ -55,9 +63,9 @@ object basic_implicit {
     with C_TYPE[Boolean]
     with C_COMBINABLE[Boolean]
     with C_LATTICE[Boolean] {
-        override val v_assert = t_Boolean.v_assert
-        override val v_node_equivalent = t_Boolean.v_node_equivalent
-        override val v_string = t_Boolean.v_string
+    override val v_assert = t_Boolean.v_assert
+    override val v_node_equivalent = t_Boolean.v_node_equivalent
+    override val v_string = t_Boolean.v_string
   }
   type T_OrLattice = T_Boolean;
 
@@ -65,9 +73,9 @@ object basic_implicit {
     with C_TYPE[Boolean]
     with C_COMBINABLE[Boolean]
     with C_LATTICE[Boolean] {
-       override val v_assert = t_Boolean.v_assert
-       override val v_node_equivalent = t_Boolean.v_node_equivalent
-       override val v_string = t_Boolean.v_string
+    override val v_assert = t_Boolean.v_assert
+    override val v_node_equivalent = t_Boolean.v_node_equivalent
+    override val v_string = t_Boolean.v_string
   }
   type T_AndLattice = T_Boolean;
 
@@ -82,7 +90,9 @@ object basic_implicit {
 
   type T_UNION_LATTICE[T_E,T_T] = T_T;
   type T_INTERSECTION_LATTICE[T_E,T_T] = T_T;
-  
+
+  type T_TUPLE_LATTICE[T_ElemType, T_ST] = T_ST;
+
   val t_String = new M_STRING("String");
   type T_String = String;
 
@@ -445,8 +455,8 @@ class M__basic_12[T_T](t_T:C_LATTICE[T_T]) {
 trait C_MAKE_LATTICE[T_Result, T_L] extends C_COMBINABLE[T_Result] with C_LATTICE[T_Result] {
 }
 
-class M_MAKE_LATTICE[T_L](name : String, t_L:C_BASIC[T_L],v_default : T_L,v_comparef : (T_L,T_L) => T_Boolean,v_compare_equalf : (T_L,T_L) => T_Boolean,v_joinf : (T_L,T_L) => T_L,v_meetf : (T_L,T_L) => T_L) 
-extends Module(name) with C_MAKE_LATTICE[T_L,T_L]
+class M_MAKE_LATTICE[T_L](name : String, t_L:C_BASIC[T_L],v_default : T_L,v_comparef : (T_L,T_L) => T_Boolean,v_compare_equalf : (T_L,T_L) => T_Boolean,v_joinf : (T_L,T_L) => T_L,v_meetf : (T_L,T_L) => T_L)
+  extends Module(name) with C_MAKE_LATTICE[T_L,T_L]
 {
   val v_equal = t_L.v_equal;
   val v_initial : T_L = v_default;
@@ -490,36 +500,36 @@ class M__basic_13[T_T](t_T:C_ORDERED[T_T]) {
 };
 
 trait C_MAX_LATTICE[T_Result, T_TO] extends
- C_MAKE_LATTICE[T_Result,T_TO] // with C_ORDERED[T_TO] 
+  C_MAKE_LATTICE[T_Result,T_TO] // with C_ORDERED[T_TO]
 {
 }
 
 class M_MAX_LATTICE[T_TO]
-      (name : String, t_TO:C_ORDERED[T_TO],v_min_element : T_TO) 
-      extends M_MAKE_LATTICE[T_TO](name,t_TO,v_min_element,
-				   new M__basic_3[ T_TO](t_TO).v__op_z,
-				   new M__basic_3[ T_TO](t_TO).v__op_z0,
-				   new M__basic_13[ T_TO](t_TO).v_max,
-				   new M__basic_13[ T_TO](t_TO).v_min)
-      with C_MAX_LATTICE[T_TO,T_TO] with C_ORDERED[T_TO]
+(name : String, t_TO:C_ORDERED[T_TO],v_min_element : T_TO)
+  extends M_MAKE_LATTICE[T_TO](name,t_TO,v_min_element,
+    new M__basic_3[ T_TO](t_TO).v__op_z,
+    new M__basic_3[ T_TO](t_TO).v__op_z0,
+    new M__basic_13[ T_TO](t_TO).v_max,
+    new M__basic_13[ T_TO](t_TO).v_min)
+    with C_MAX_LATTICE[T_TO,T_TO] with C_ORDERED[T_TO]
 {
   val v_less = t_TO.v_less;
   val v_less_equal = t_TO.v_less_equal;
 }
 
 trait C_MIN_LATTICE[T_Result, T_T] extends
-C_MAKE_LATTICE[T_Result,T_T] // with C_ORDERED[T_T]
+  C_MAKE_LATTICE[T_Result,T_T] // with C_ORDERED[T_T]
 {
 }
 
 class M_MIN_LATTICE[T_T]
-	(name : String, t_T:C_ORDERED[T_T],v_max_element : T_T) 
-extends M_MAKE_LATTICE[T_T](name,t_T,v_max_element,
-			    new M__basic_3[ T_T](t_T).v__op_1,
-			    new M__basic_3[ T_T](t_T).v__op_10,
-			    new M__basic_13[ T_T](t_T).v_min,
-			    new M__basic_13[ T_T](t_T).v_max)
-      with C_MIN_LATTICE[T_T,T_T] with C_ORDERED[T_T]
+(name : String, t_T:C_ORDERED[T_T],v_max_element : T_T)
+  extends M_MAKE_LATTICE[T_T](name,t_T,v_max_element,
+    new M__basic_3[ T_T](t_T).v__op_1,
+    new M__basic_3[ T_T](t_T).v__op_10,
+    new M__basic_13[ T_T](t_T).v_min,
+    new M__basic_13[ T_T](t_T).v_max)
+    with C_MIN_LATTICE[T_T,T_T] with C_ORDERED[T_T]
 {
   val v_less = t_T.v_less;
   val v_less_equal = t_T.v_less_equal;
@@ -616,7 +626,7 @@ trait C_SEQUENCE[T_Result <: Node, T_ElemType] extends C_READ_ONLY_ORDERED_COLLE
 
 abstract class T_SEQUENCE[T_ElemType <: Node]
 (t_Result : C_SEQUENCE[T_SEQUENCE[T_ElemType],T_ElemType])
-extends Node(t_Result)
+  extends Node(t_Result)
 {
   type T_Result = T_SEQUENCE[T_ElemType];
   def getType : C_PHYLUM[T_Result] = t_Result;
@@ -629,9 +639,9 @@ extends Node(t_Result)
   def addcopy(x : T_ElemType) : T_Result = concat(t_Result.v_single(x));
 }
 
-class M_SEQUENCE[T_ElemType <: Node](name : String, t_ElemType:C_PHYLUM[T_ElemType]) 
-extends I_PHYLUM[T_SEQUENCE[T_ElemType]](name) 
-with C_SEQUENCE[T_SEQUENCE[T_ElemType],T_ElemType]
+class M_SEQUENCE[T_ElemType <: Node](name : String, t_ElemType:C_PHYLUM[T_ElemType])
+  extends I_PHYLUM[T_SEQUENCE[T_ElemType]](name)
+    with C_SEQUENCE[T_SEQUENCE[T_ElemType],T_ElemType]
 {
   // we make things easier (but inefficient) by using lists.
   val t_Result : this.type = this;
@@ -641,7 +651,7 @@ with C_SEQUENCE[T_SEQUENCE[T_ElemType],T_ElemType]
     case c_none() => List()
   };
   def u__op_AC(x:Any) : Option[(T_Result,Seq[T_ElemType])] = x match {
-    case x : T_Result => Some((x,toList(x)));
+    case x : T_Result @unchecked => Some((x,toList(x)));
     case _ => None
   };
   val p__op_AC = new PatternSeqFunction[T_Result,T_ElemType](u__op_AC);
@@ -651,13 +661,13 @@ with C_SEQUENCE[T_SEQUENCE[T_ElemType],T_ElemType]
   def f_nth_from_end(v_i : T_Integer, v_l : T_Result):T_ElemType =
     toList(v_l).reverse.apply(v_i);
   val v_position = f_position _;
-  def f_position(v_x : T_ElemType, v_l : T_Result):T_Integer = 
+  def f_position(v_x : T_ElemType, v_l : T_Result):T_Integer =
     toList(v_l).indexOf(v_x);
   val v_position_from_end = f_position_from_end _;
   def f_position_from_end(v_x : T_ElemType, v_l : T_Result):T_Integer =
     toList(v_l).reverse.indexOf(v_x);
   val v_member = f_member _;
-  def f_member(v_x : T_ElemType, v_l : T_Result):T_Boolean = 
+  def f_member(v_x : T_ElemType, v_l : T_Result):T_Boolean =
     toList(v_l).contains(v_x);
   case class c_append(v_l1 : T_Result,v_l2 : T_Result) extends T_Result(t_Result) {
     private val n1 : Int = v_l1.size();
@@ -668,7 +678,7 @@ with C_SEQUENCE[T_SEQUENCE[T_ElemType],T_ElemType]
       if (i < n1) v_l1.nth(i) else v_l2.nth(i-n1);
     override def toString() : String =
       Debug.with_level {
-	"append(" + v_l1 + "," + v_l2 + ")"
+        "append(" + v_l1 + "," + v_l2 + ")"
       };
   }
   val v_append = f_append _;
@@ -677,15 +687,15 @@ with C_SEQUENCE[T_SEQUENCE[T_ElemType],T_ElemType]
     case x@c_append(v_l1,v_l2) => Some((x,v_l1,v_l2));
     case _ => None };
   val p_append = new PatternFunction[(T_Result,T_Result,T_Result)](u_append);
-  
+
   case class c_single(v_x : T_ElemType) extends T_Result(t_Result) {
     def children : List[Node] = List(v_x);
     override def size() : Int = 1;
-    override def nth(i : Int) : T_ElemType = 
+    override def nth(i : Int) : T_ElemType =
       if (i == 0) v_x else super.nth(i);
     override def toString() : String =
       Debug.with_level {
-	"single(" + v_x + ")"
+        "single(" + v_x + ")"
       };
   }
   val v_single = f_single _;
@@ -694,12 +704,12 @@ with C_SEQUENCE[T_SEQUENCE[T_ElemType],T_ElemType]
     case x@c_single(v_x) => Some((x,v_x));
     case _ => None };
   val p_single = new PatternFunction[(T_Result,T_ElemType)](u_single);
-  
+
   case class c_none() extends T_Result(t_Result) {
     def children : List[Node] = List();
     override def toString() : String =
       Debug.with_level {
-	"none()"
+        "none()"
       };
   }
   val v_none = f_none _;
@@ -708,7 +718,7 @@ with C_SEQUENCE[T_SEQUENCE[T_ElemType],T_ElemType]
     case x@c_none() => Some((x));
     case _ => None };
   val p_none = new PatternFunction[T_Result](u_none);
-  
+
 }
 
 trait C_BAG[T_Result, T_ElemType] extends C_TYPE[T_Result] with C_COLLECTION[T_Result,T_ElemType] with C_COMBINABLE[T_Result] {
@@ -716,70 +726,70 @@ trait C_BAG[T_Result, T_ElemType] extends C_TYPE[T_Result] with C_COLLECTION[T_R
   val v_combine : (T_Result,T_Result) => T_Result;
 }
 
-class I_BAG[T_ElemType](name : String) 
-extends Module(name)
-with C_BAG[List[T_ElemType],T_ElemType] 
+class I_BAG[T_ElemType](name : String)
+  extends Module(name)
+    with C_BAG[List[T_ElemType],T_ElemType]
 {
   type T_Result = List[T_ElemType];
 
   val v_equal = f_equal _;
   def f_equal(x : T_Result, y : T_Result) = x == y;
-  
+
   val v_node_equivalent = f_equal _;
-  
+
   val v_string = f_string _;
   def f_string(v : T_Result) : String = v.toString();
-  
+
   val v_assert = f_assert _;
   def f_assert(v__88 : T_Result) : Unit = {};
-  
+
   val v__op_AC = f__op_AC _;
   def f__op_AC(v_l : Seq[T_ElemType]):T_Result = v_l.toList;
-  
+
   val p__op_AC = new PatternSeqFunction[T_Result,T_ElemType](u__op_AC);
   def u__op_AC(x:Any) : Option[(T_Result,Seq[T_ElemType])] = x match {
-    case x:T_Result => Some((x,x))
+    case x:T_Result @unchecked => Some((x,x))
     case _ => None
   };
-  
+
   val v_member = f_member _;
   def f_member(v_e : T_ElemType, v_l : T_Result):T_Boolean =
     v_l.contains(v_e);
-  
+
   val v_append = f_append _;
   def f_append(v_l1 : T_Result, v_l2 : T_Result):T_Result = v_l1 ++ v_l2;
   def u_append(x:Any) : Option[(T_Result,T_Result,T_Result)] = x match {
-    case x:T_Result => x match {
+    case x:T_Result @unchecked => x match {
       case x1::x2::l => Some((x,List(x1),x2::l))
-      case _ => None 
+      case _ => None
     };
     case _ => None;
   }
   val p_append = new PatternFunction[(T_Result,T_Result,T_Result)](u_append);
-  
+
   val v_single = f_single _;
   def f_single(v_x : T_ElemType):T_Result = List(v_x);
   def u_single(x:Any) : Option[(T_Result,T_ElemType)] = x match {
-    case x:T_Result => x match {
+    case x:T_Result @unchecked => x match {
       case v_x::Nil => Some((x,v_x));
       case _ => None };
     case _ => None };
   val p_single = new PatternFunction[(T_Result,T_ElemType)](u_single);
-  
+
   val v_none = f_none _;
   def f_none():T_Result = Nil;
   def u_none(x:Any) : Option[T_Result] = x match {
-    case x@Nil => Some((x));
+    case x@Nil => Some((x).asInstanceOf[T_Result]);
     case _ => None };
   val p_none = new PatternFunction[T_Result](u_none);
-  
+
   val v_initial:T_Result = v_none();
   val v_combine = f_combine _;
   def f_combine(v_l1 : T_Result, v_l2 : T_Result):T_Result = v_append(v_l1,v_l2);
 }
 
-class M_BAG[T_ElemType](name : String, t_ElemType:C_BASIC[T_ElemType]) 
-extends I_BAG[T_ElemType](name)
+class M_BAG[T_ElemType](name : String, t_ElemType:C_BASIC[T_ElemType])
+  extends I_BAG[T_ElemType](name)
 {
 }
 
@@ -852,66 +862,66 @@ trait C_SET[T_Result, T_ElemType] extends C_TYPE[T_Result] with C_COMPARABLE[T_R
 import scala.collection.immutable.Set;
 import scala.collection.immutable.ListSet;
 
-class M_SET[T_ElemType](name : String, t_ElemType:C_BASIC[T_ElemType]) 
-extends I_TYPE[Set[T_ElemType]](name)
-with C_SET[Set[T_ElemType],T_ElemType]
+class M_SET[T_ElemType](name : String, t_ElemType:C_BASIC[T_ElemType])
+  extends I_TYPE[Set[T_ElemType]](name)
+    with C_SET[Set[T_ElemType],T_ElemType]
 {
   override def f_assert(v__88 : T_Result) : Unit = {};
-  
+
   val v__op_AC = f__op_AC _;
   def f__op_AC(v_l : Seq[T_ElemType]):T_Result = ListSet(v_l:_*);
-  
+
   val p__op_AC = new PatternSeqFunction[T_Result,T_ElemType](u__op_AC);
   def u__op_AC(x:Any) : Option[(T_Result,Seq[T_ElemType])] = x match {
-    case x:T_Result => Some((x,x.toSeq));
+    case x:T_Result @unchecked => Some((x,x.toSeq));
     case _ => None
   };
-  
+
   val v_member = f_member _;
   def f_member(v_e : T_ElemType, v_l : T_Result):T_Boolean =
     v_l.contains(v_e);
-  
+
   val v_append = f_append _;
   def f_append(v_l1 : T_Result, v_l2 : T_Result):T_Result =
     v_l1 ++ v_l2;
   def u_append(x:Any) : Option[(T_Result,T_Result,T_Result)] = x match {
-    case x:T_Result =>
-    if (x.size > 1) {
-      val y : T_ElemType = x.iterator.next();
-      Some((x,ListSet(y),x - y))
-    } else {
-      None
-    };
+    case x:T_Result @unchecked =>
+      if (x.size > 1) {
+        val y : T_ElemType = x.iterator.next();
+        Some((x,ListSet(y),x - y))
+      } else {
+        None
+      };
     case _ => None;
   }
   val p_append = new PatternFunction[(T_Result,T_Result,T_Result)](u_append);
-  
+
   val v_single = f_single _;
   def f_single(v_x : T_ElemType):T_Result = ListSet(v_x);
   def u_single(x:Any) : Option[(T_Result,T_ElemType)] = x match {
-    case x:T_Result => if (x.size == 1) Some(x,x.iterator.next()) else None;
+    case x:T_Result @unchecked => if (x.size == 1) Some(x,x.iterator.next()) else None;
     case _ => None
   };
   val p_single = new PatternFunction[(T_Result,T_ElemType)](u_single);
-  
+
   val v_none = f_none _;
   def f_none():T_Result = ListSet();
   def u_none(x:Any) : Option[T_Result] = x match {
-    case x:T_Result =>
-    if (x.size == 0) Some(x) else None;
+    case x:T_Result @unchecked =>
+      if (x.size == 0) Some(x) else None;
     case _ => None
   };
   val p_none = new PatternFunction[T_Result](u_none);
-  
+
   val v_initial = v_none();
-  
+
   val v_less = f_less _;
   def f_less(v__99 : T_Result, v__100 : T_Result):T_Boolean =
     v__99.subsetOf(v__100) && v__99 != v__100;
   val v_less_equal = f_less_equal _;
   def f_less_equal(v__101 : T_Result, v__102 : T_Result):T_Boolean =
     v__101.subsetOf(v__102);
-  
+
   val v_union = f_union _;
   def f_union(v__106 : T_Result, v__107 : T_Result):T_Result =
     v__106 ++ v__107;
@@ -941,7 +951,7 @@ trait C_MULTISET[T_Result, T_ElemType] extends C_TYPE[T_Result]with C_BAG[T_Resu
 
 class M_MULTISET[T_ElemType](name : String,val t_ElemType : C_TYPE[T_ElemType] with C_BASIC[T_ElemType])
   extends M_BAG[T_ElemType](name,t_ElemType)
-  with C_MULTISET[T_BAG[T_ElemType],T_ElemType]
+    with C_MULTISET[T_BAG[T_ElemType],T_ElemType]
 {
   val t_Result : this.type = this;
 
@@ -960,8 +970,8 @@ class M_MULTISET[T_ElemType](name : String,val t_ElemType : C_TYPE[T_ElemType] w
   def f_less_equal(l1 : T_Result, l2 : T_Result):T_Boolean = {
     l1 match {
       case Nil => true;
-      case x::r => (f_count(x,l1)<=f_count(x,l2)) && 
-	f_less_equal(r,l2)
+      case x::r => (f_count(x,l1)<=f_count(x,l2)) &&
+        f_less_equal(r,l2)
     }
   }
 
@@ -969,7 +979,7 @@ class M_MULTISET[T_ElemType](name : String,val t_ElemType : C_TYPE[T_ElemType] w
   def f_count(v_x : T_ElemType, v_l : T_Result):T_Integer = {
     v_l match {
       case x::r => (if (t_ElemType.v_equal(v_x,x)) 1 else 0) +
-	           f_count(v_x,r)
+        f_count(v_x,r)
       case Nil => 0
     }
   }
@@ -978,8 +988,8 @@ class M_MULTISET[T_ElemType](name : String,val t_ElemType : C_TYPE[T_ElemType] w
   def f_union(l1 : T_Result, l2 : T_Result):T_Result = {
     l1 match {
       case x::r => {
-	val rp = f_union(r,l2);
-	if (f_count(x,r) >= f_count(x,l2)) x::rp else rp
+        val rp = f_union(r,l2);
+        if (f_count(x,r) >= f_count(x,l2)) x::rp else rp
       }
       case Nil => l2
     }
@@ -989,8 +999,8 @@ class M_MULTISET[T_ElemType](name : String,val t_ElemType : C_TYPE[T_ElemType] w
   def f_intersect(l1 : T_Result, l2 : T_Result):T_Result = {
     l1 match {
       case x::r => {
-	val rp = f_intersect(r,l2);
-	if (f_count(x,r) < f_count(x,l2)) x::rp else rp
+        val rp = f_intersect(r,l2);
+        if (f_count(x,r) < f_count(x,l2)) x::rp else rp
       }
       case Nil => Nil;
     }
@@ -1000,29 +1010,29 @@ class M_MULTISET[T_ElemType](name : String,val t_ElemType : C_TYPE[T_ElemType] w
   def f_difference(l1 : T_Result, l2 : T_Result):T_Result = {
     l1 match {
       case x::r => {
-	val rp = f_difference(r,l2);
-	if (f_count(x,r) >= f_count(x,l2)) x::rp else rp
+        val rp = f_difference(r,l2);
+        if (f_count(x,r) >= f_count(x,l2)) x::rp else rp
       }
       case Nil => Nil;
     }
   }
 
-/*
-  override
-  val v_combine = f_combine _;
-  override
-  def f_combine(v_x : T_Result, v_y : T_Result):T_Result = v_union(v_x,v_y);
-  override def finish() : Unit = {
-    super.finish();
-  }
-*/
+  /*
+    override
+    val v_combine = f_combine _;
+    override
+    def f_combine(v_x : T_Result, v_y : T_Result):T_Result = v_union(v_x,v_y);
+    override def finish() : Unit = {
+      super.finish();
+    }
+  */
 
 }
 
 /*
-trait C_ORDERED_SET[T_Result, T_ElemType] 
-extends C_ORDERED_COLLECTION[T_Result,T_ElemType] 
-with C_SET[T_Result,T_ElemType] 
+trait C_ORDERED_SET[T_Result, T_ElemType]
+extends C_ORDERED_COLLECTION[T_Result,T_ElemType]
+with C_SET[T_Result,T_ElemType]
 {
 }
 
@@ -1156,20 +1166,20 @@ class M_ORDERED_MULTISET[T_ElemType](t_ElemType:C_ORDERED[T_ElemType] extends Mo
 }
 */
 
-trait C_UNION_LATTICE[T_Result, T_ElemType, T_ST] 
-extends C_MAKE_LATTICE[T_Result, T_ST] with C_SET[T_Result,T_ElemType]
+trait C_UNION_LATTICE[T_Result, T_ElemType, T_ST]
+  extends C_MAKE_LATTICE[T_Result, T_ST] with C_SET[T_Result,T_ElemType]
 {
 }
 
 class M_UNION_LATTICE[T_ElemType, T_ST]
-                     (name : String, t_ElemType:Any,
-		      t_ST:C_SET[T_ST,T_ElemType]) 
-extends M_MAKE_LATTICE[T_ST](name,t_ST,t_ST.v_none(),
-			     new M__basic_3[ T_ST](t_ST).v__op_z,
-			     new M__basic_3[ T_ST](t_ST).v__op_z0,
-			     new M__basic_19[ T_ElemType,T_ST](t_ElemType,t_ST).v__op_5w,
-			     new M__basic_19[ T_ElemType,T_ST](t_ElemType,t_ST).v__op_w5)
-with C_UNION_LATTICE[T_ST,T_ElemType,T_ST]
+(name : String, t_ElemType:Any,
+ t_ST:C_SET[T_ST,T_ElemType])
+  extends M_MAKE_LATTICE[T_ST](name,t_ST,t_ST.v_none(),
+    new M__basic_3[ T_ST](t_ST).v__op_z,
+    new M__basic_3[ T_ST](t_ST).v__op_z0,
+    new M__basic_19[ T_ElemType,T_ST](t_ElemType,t_ST).v__op_5w,
+    new M__basic_19[ T_ElemType,T_ST](t_ElemType,t_ST).v__op_w5)
+    with C_UNION_LATTICE[T_ST,T_ElemType,T_ST]
 {
   val v_less = t_ST.v_less;
   val v_less_equal = t_ST.v_less_equal;
@@ -1192,18 +1202,18 @@ with C_UNION_LATTICE[T_ST,T_ElemType,T_ST]
 
 
 trait C_INTERSECTION_LATTICE[T_Result, T_ElemType, T_ST]
-extends C_MAKE_LATTICE[T_Result, T_ST] with C_SET[T_Result,T_ElemType]
+  extends C_MAKE_LATTICE[T_Result, T_ST] with C_SET[T_Result,T_ElemType]
 {
 }
 
 class M_INTERSECTION_LATTICE[T_ElemType, T_ST]
 (name : String, t_ElemType:Any,t_ST:C_SET[T_ST,T_ElemType],v_universe : T_ST)
-extends M_MAKE_LATTICE[T_ST](name,t_ST,v_universe,
-			     new M__basic_3[ T_ST](t_ST).v__op_1,
-			     new M__basic_3[ T_ST](t_ST).v__op_10,
-			     new M__basic_19[ T_ElemType,T_ST](t_ElemType,t_ST).v__op_w5,
-			     new M__basic_19[ T_ElemType,T_ST](t_ElemType,t_ST).v__op_5w)
-with C_INTERSECTION_LATTICE[T_ST,T_ElemType,T_ST] 
+  extends M_MAKE_LATTICE[T_ST](name,t_ST,v_universe,
+    new M__basic_3[ T_ST](t_ST).v__op_1,
+    new M__basic_3[ T_ST](t_ST).v__op_10,
+    new M__basic_19[ T_ElemType,T_ST](t_ElemType,t_ST).v__op_w5,
+    new M__basic_19[ T_ElemType,T_ST](t_ElemType,t_ST).v__op_5w)
+    with C_INTERSECTION_LATTICE[T_ST,T_ElemType,T_ST]
 {
   val v_less = t_ST.v_less;
   val v_less_equal = t_ST.v_less_equal;
@@ -1232,20 +1242,20 @@ trait C_PAIR[T_Result, T_T1, T_T2] extends C_BASIC[T_Result] with C_TYPE[T_Resul
 }
 
 class T_PAIR[T_T1,T_T2]
-(t_PAIR : C_PAIR[T_PAIR[T_T1,T_T2],T_T1,T_T2]) 
-extends Value(t_PAIR) { }
+(t_PAIR : C_PAIR[T_PAIR[T_T1,T_T2],T_T1,T_T2])
+  extends Value(t_PAIR) { }
 
 class M_PAIR[T_T1, T_T2]
-      (name : String, t_T1:C_BASIC[T_T1],t_T2:C_BASIC[T_T2]) 
-extends I_TYPE[T_PAIR[T_T1,T_T2]](name)
-with    C_PAIR[T_PAIR[T_T1,T_T2],T_T1,T_T2]
+(name : String, t_T1:C_BASIC[T_T1],t_T2:C_BASIC[T_T2])
+  extends I_TYPE[T_PAIR[T_T1,T_T2]](name)
+    with    C_PAIR[T_PAIR[T_T1,T_T2],T_T1,T_T2]
 {
   val t_Result : this.type = this;
   case class c_pair(v_x : T_T1,v_y : T_T2) extends T_Result(t_Result) {
     def children : List[Node] = List();
     override def toString() : String =
       Debug.with_level {
-	"pair(" + v_x + "," + v_y + ")"
+        "pair(" + v_x + "," + v_y + ")"
       }
   }
   val v_pair = f_pair _;
@@ -1254,28 +1264,28 @@ with    C_PAIR[T_PAIR[T_T1,T_T2],T_T1,T_T2]
     case x@c_pair(v_x,v_y) => Some((x,v_x,v_y));
     case _ => None };
   val p_pair = new PatternFunction[(T_Result,T_T1,T_T2)](u_pair);
-  
+
   val v_fst = f_fst _;
   def f_fst(v_p : T_Result):T_T1 =
     v_p match {
       case p_pair(_,v_x,_) => v_x
       case _ => throw UndefinedAttributeException("local fst");
     };
-  
+
   val v_snd = f_snd _;
   def f_snd(v_p : T_Result):T_T2 =
     v_p match {
       case p_pair(_,_,v_y) => return v_y
       case _ => throw UndefinedAttributeException("local snd")
     };
-  
+
   override def f_equal(v_x : T_Result, v_y : T_Result):T_Boolean = {
     v_x match {
       case p_pair(_,v_x1,v_x2) => {
         v_y match {
           case p_pair(_,v_y1,v_y2) => {
-            return v_and(new M__basic_2[ T_T1](t_T1).v__op_0(v_x1,v_y1),new 
-			 M__basic_2[ T_T2](t_T2).v__op_0(v_x2,v_y2));
+            return v_and(new M__basic_2[ T_T1](t_T1).v__op_0(v_x1,v_y1),new
+                M__basic_2[ T_T2](t_T2).v__op_0(v_x2,v_y2));
           }
         }
       }
@@ -1284,60 +1294,60 @@ with    C_PAIR[T_PAIR[T_T1,T_T2],T_T1,T_T2]
   }
 }
 
-trait C_STRING[T_Result] extends C_ORDERED[T_Result] 
-	 with C_PRINTABLE[T_Result] with C_LIST[T_Result,Char] {
+trait C_STRING[T_Result] extends C_ORDERED[T_Result]
+  with C_PRINTABLE[T_Result] with C_LIST[T_Result,Char] {
 }
 
 class M_STRING(name : String)
-extends I_TYPE[String](name)
-with C_STRING[String]
+  extends I_TYPE[String](name)
+    with C_STRING[String]
 {
   override def f_assert(v__88 : T_Result) : Unit = {};
-  
+
   val v__op_AC = f__op_AC _;
-  def f__op_AC(v_l : Char*):T_Result = (v_l :\ "")((c,s) => c + s);
-  
+  def f__op_AC(v_l : Char*):T_Result = (v_l foldRight "")((c,s) => s"$c$s");
+
   val p__op_AC = new PatternSeqFunction[T_Result,Char](u__op_AC);
   def u__op_AC(x:Any) : Option[(T_Result,Seq[Char])] = x match {
     case x:String => Some((x,x));
     case _ => None
   };
-  
+
   val v_member = f_member _;
   def f_member(v_e : Char, v_l : T_Result):T_Boolean =
     v_l.indexOf(v_e) != -1;
-  
+
   val v_append = f_append _;
   def f_append(v_l1 : T_Result, v_l2 : T_Result):T_Result = v_l1 + v_l2;
   def u_append(x:Any) : Option[(T_Result,T_Result,T_Result)] = x match {
     case x:String  =>
-    if (x.length() > 1) Some((x,x.substring(0,1),x.substring(1)))
-    else None;
+      if (x.length() > 1) Some((x,x.substring(0,1),x.substring(1)))
+      else None;
     case _ => None
   };
   val p_append = new PatternFunction[(T_Result,T_Result,T_Result)](u_append);
-  
+
   val v_single = f_single _;
   def f_single(v_x : Char):T_Result = "" + v_x;
   def u_single(x:Any) : Option[(T_Result,Char)] = x match {
     case x:String =>
-    if (x.length() == 1) Some((x,x.charAt(0)))
-    else None;
+      if (x.length() == 1) Some((x,x.charAt(0)))
+      else None;
     case _ => None
   };
   val p_single = new PatternFunction[(T_Result,Char)](u_single);
-  
+
   val v_none = f_none _;
   def f_none():T_Result = "";
   def u_none(x:Any) : Option[T_Result] = x match {
     case x:String =>
-    if (x.length() == 0) Some((x)) else None;
+      if (x.length() == 0) Some((x)) else None;
     case _ => None
   };
   val p_none = new PatternFunction[T_Result](u_none);
-  
+
   val v_cons = f_cons _;
-  def f_cons(x : Char, s : String) : String = x + s;
+  def f_cons(x : Char, s : String) : String = s"$x$s";
   val v_concatenate : (T_Result,T_Result) => T_Result = v_append;
   val v_nth = f_nth _;
   def f_nth(v_i : T_Integer, v_l : T_Result):Char = v_l.charAt(v_i);
@@ -1362,7 +1372,7 @@ with C_STRING[String]
   val v_butsubseq_from_end = f_butsubseq_from_end _;
   def f_butsubseq_from_end(v_l : T_Result, v_start : T_Integer, v_finish : T_Integer):T_Result =
     throw new UnsupportedOperationException("but_subseq_from_end");
-  
+
   val v_less = f_less _;
   def f_less(v_x : T_Result, v_y : T_Result):T_Boolean =
     v_x.compareTo(v_y) < 0;
@@ -1396,3 +1406,81 @@ class M__basic_24[T_Node <: Node](t_Node:C_PHYLUM[T_Node]) {
     v_x.asInstanceOf[Node].lineNumber;
 };
 
+trait C_TUPLE_LATTICE[T_Result, T_ElemType, T_ST]
+  extends C_MAKE_LATTICE[T_Result, T_ST]
+    with C_LIST[T_Result, T_ElemType];
+
+class M_TUPLE_LATTICE[T_ElemType, T_ST](val name: String,
+                                        val t_ElemType: C_TYPE[T_ElemType] with C_LATTICE[T_ElemType],
+                                        val t_ST: C_TYPE[T_ST] with C_LIST[T_ST, T_ElemType])
+  extends Module(name)
+    with C_TUPLE_LATTICE[T_ST, T_ElemType, T_ST] {
+
+  override val v_concatenate = t_ST.v_concatenate;
+  override val p__op_AC = t_ST.p__op_AC;
+  override val p_append = t_ST.p_append;
+  override val p_single = t_ST.p_single;
+  override val p_none = t_ST.p_none;
+  override val v_member = t_ST.v_member;
+  override val v_nth_from_end = t_ST.v_nth_from_end;
+  override val v_position = t_ST.v_position;
+  override val v_position_from_end = t_ST.v_position_from_end;
+  override val v_append = t_ST.v_append;
+  override val v_single = t_ST.v_single;
+  override val v_none = t_ST.v_none;
+  override val v_subseq = t_ST.v_subseq;
+  override val v_subseq_from_end = t_ST.v_subseq_from_end;
+  override val v_butsubseq = t_ST.v_butsubseq;
+  override val v_butsubseq_from_end = t_ST.v_butsubseq_from_end;
+  override val v_cons = t_ST.v_cons;
+  override val v_bottom = t_ST.v_none();
+  override val v__op_AC = t_ST.v__op_AC;
+  override val v_nth = t_ST.v_nth;
+  override val v_equal = t_ST.v_equal;
+  override val v_assert = t_ST.v_assert;
+  override val v_node_equivalent = t_ST.v_node_equivalent;
+  override val v_string = t_ST.v_string;
+
+  override def v_initial: T_ST = v_bottom;
+  override val v_join = f_combine;
+  override val v_meet = f_meet;
+  override val v_combine = f_combine;
+
+  def f_combine(v_t1: T_ST, v_t2: T_ST): T_ST = {
+    v_t1 match {
+      case t_ST.p_none(_) => v_t2
+      case t_ST.p_single(_, x) => v_t2 match {
+        case t_ST.p_none(_) => v_t1
+        case t_ST.p_single(_, y) => t_ST.v__op_AC(Seq(t_ElemType.v_join(x, y)))
+        case t_ST.p_append(_, ly1, ly2) => v_append(f_combine(v_t1, ly1), ly2)
+      }
+      case t_ST.p_append(_, lx1, lx2) => v_t2 match {
+        case t_ST.p_none(_) => v_t1
+        case t_ST.p_single(_, y) => v_append(f_combine(lx1, v_t2), lx2)
+        case t_ST.p_append(_, ly1, ly2) => v_append(f_combine(lx1, ly1), f_combine(lx2, ly2))
+      }
+    }
+  };
+
+  def f_meet(v_t1: T_ST, v_t2: T_ST): T_ST = {
+    v_t1 match {
+      case t_ST.p_none(_) => v_t1
+      case t_ST.p_single(_, x) => v_t2 match {
+        case t_ST.p_none(_) => v_t2
+        case t_ST.p_single(_, y) => t_ST.v__op_AC(Seq(t_ElemType.v_meet(x, y)))
+        case t_ST.p_append(_, ly1, ly2) => f_meet(v_t1, ly1)
+      }
+      case t_ST.p_append(_, lx1, lx2) => v_t2 match {
+        case t_ST.p_none(_) => v_t2
+        case t_ST.p_single(_, y) => f_meet(lx1, v_t2)
+        case t_ST.p_append(_, ly1, ly2) => v_append(f_meet(lx1, ly1), f_meet(lx2, ly2))
+      }
+    }
+  };
+
+  // x < y iff x <= y and x != y
+  override val v_compare: (T_ST, T_ST) => T_Boolean = (x, y) => v_compare_equal(x, y) && !v_equal(x, y)
+
+  // x <= y iff x \/ y == y
+  override val v_compare_equal: (T_ST, T_ST) => T_Boolean = (x, y) => v_equal(f_combine(x, y), y)
+}

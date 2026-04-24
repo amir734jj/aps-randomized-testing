@@ -14,7 +14,7 @@ object NestedCyclesDriver extends App {
   }
 
   def genTestbed(depth: Int): Map[String, () => _] = {
-    val re = build(depth, 2)
+    val re = build(depth, 3)
 
     var m = Map[String, () => Any]()
     m = m + ("dynamic" -> (() => {
@@ -31,10 +31,17 @@ object NestedCyclesDriver extends App {
       staticResult.v_msgs.asInstanceOf[Any]
     }))
 
+    m = m + ("synth" -> (() => {
+      val (_, tree) = re(2)
+      val synthResult = new M_NESTED_CYCLES_SYNTH("Synth", tree.asInstanceOf[M_SIMPLE]);
+      synthResult.finish()
+      synthResult.v_msgs.asInstanceOf[Any]
+    }))
+
     m
   }
 
-  for (i <- 1.0 to 8 by 1.0) {
+  for (i <- 1.0 to 12 by 1.0) {
     val depth = i.toInt
     println("AST Depth: " + depth)
 
@@ -42,8 +49,21 @@ object NestedCyclesDriver extends App {
 
     val (_, staticRe) = time("Static", result("static"))
     val (_, dynamicRe) = time("Dynamic", result("dynamic"))
+    val (_, synthRe) = time("Synth", result("synth"))
 
-    println("Result matching: " + dynamicRe.equals(staticRe) + "\n")
+    if (dynamicRe.equals(staticRe)) {
+      println("Dynamic+Static result matching")
+    } else {
+      throw new RuntimeException(f"Dynamic+Static result not matching static: ${staticRe}, dynamic: ${dynamicRe}")
+    }
+
+    if (dynamicRe.equals(synthRe)) {
+      println("Dynamic+Synth result matching")
+    } else {
+      throw new RuntimeException(f"Dynamic+Synth result not matching ${synthRe}, dynamic: ${dynamicRe}")
+    }
+
+    println("\n")
   }
 
 }

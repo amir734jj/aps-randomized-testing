@@ -1,8 +1,12 @@
 import scala.util.Random
 
 object SimpleAst {
-  private final def genVariableName(depth: Int): String = {
-    Random.nextString(depth)
+  private val alphabet = "abcdefghijklmnopqrstuvwxyz"
+
+  private final def genVariableName(length: Int): String = {
+    (1 to length)
+      .map(_ => alphabet(Random.nextInt(alphabet.length)))
+      .mkString
   }
 
   // This is used for the width of the AST
