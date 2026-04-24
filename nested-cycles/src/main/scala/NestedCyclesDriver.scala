@@ -51,16 +51,26 @@ object NestedCyclesDriver extends App {
     val (_, dynamicRe) = time("Dynamic", result("dynamic"))
     val (_, synthRe) = time("Synth", result("synth"))
 
+    println(s"Static: $staticRe")
+    println(s"Dynamic: $dynamicRe")
+    println(s"Synth: $synthRe")
+
+    if (staticRe.equals(synthRe)) {
+      println("Static+Synth result matching")
+    } else {
+      throw new RuntimeException("Static+Synth result not matching")
+    }
+
     if (dynamicRe.equals(staticRe)) {
       println("Dynamic+Static result matching")
     } else {
-      throw new RuntimeException(f"Dynamic+Static result not matching static: ${staticRe}, dynamic: ${dynamicRe}")
+      throw new RuntimeException("Dynamic+Static result not matching")
     }
 
     if (dynamicRe.equals(synthRe)) {
       println("Dynamic+Synth result matching")
     } else {
-      throw new RuntimeException(f"Dynamic+Synth result not matching ${synthRe}, dynamic: ${dynamicRe}")
+      throw new RuntimeException("Dynamic+Synth result not matching")
     }
 
     println("\n")
