@@ -87,12 +87,9 @@ class M_NESTED_CYCLES_SYNTH[T_T](name : String,val t_T : C_TYPE[T_T] with C_SIMP
   type T_Names = /*TI*/T_SET[T_String];
   val t_NamesLattice = new M_UNION_LATTICE[T_String,T_Names]("NamesLattice",t_String,t_Names)
     /* dumping traits */
-    with C_TYPE[T_Names]
-    with C_SET[T_Names, T_String] {
-    override val v_assert = t_Names.v_assert;
+    with C_SET[T_Names, T_String]
+    with C_TYPE[T_Names] {
     override val v_equal = t_Names.v_equal;
-    override val v_node_equivalent = t_Names.v_node_equivalent;
-    override val v_string = t_Names.v_string;
     override val v_less = t_Names.v_less;
     override val v_less_equal = t_Names.v_less_equal;
     override val v_none = t_Names.v_none;
@@ -105,6 +102,9 @@ class M_NESTED_CYCLES_SYNTH[T_T](name : String,val t_T : C_TYPE[T_T] with C_SIMP
     override val v_intersect = t_Names.v_intersect;
     override val v_difference = t_Names.v_difference;
     override val v_combine = t_Names.v_combine;
+    override val v_assert = t_Names.v_assert;
+    override val v_node_equivalent = t_Names.v_node_equivalent;
+    override val v_string = t_Names.v_string;
   }
 
   type T_NamesLattice = /*TI*/T_UNION_LATTICE[T_String,T_Names];
@@ -202,238 +202,524 @@ class M_NESTED_CYCLES_SYNTH[T_T](name : String,val t_T : C_TYPE[T_T] with C_SIMP
   private object a1_out extends Attribute[t_Result.T_Stmt,T_NamesLattice](t_Result.t_Stmt,t_NamesLattice,"out") with ChangeTrackingAttribute[t_Result.T_Stmt,T_NamesLattice] {
     override def createEvaluation(anchor : t_Result.T_Stmt) : Evaluation[t_Result.T_Stmt,T_NamesLattice] = new E1_out(anchor);
   }
-  def visit_0_1(node : T_Program, changed : AtomicBoolean) : Unit = node match {
-    case p_program(_,_) => visit_0_1_0(node, changed);
-  };
-  def visit_0_1_0(anchor : T_Program, changed : AtomicBoolean) : Unit = anchor match {
-    case p_program(v_p,v_b) => {
-      a_outer_names.set(v_b,t_Names.v_none());
 
-      visit_1_1(v_b, changed);
+  val evaluated_map_Program_sharedinfo_all_names = scala.collection.mutable.Map[Int, Boolean]()
+
+  def eval_Program_sharedinfo_all_names(node: T_Program)(implicit isInsideFixedPoint: Boolean, changed: AtomicBoolean): Unit = {
+    if (!isInsideFixedPoint) {
+      evaluated_map_Program_sharedinfo_all_names.getOrElse(node.nodeNumber, false) match {
+        case true => return ()
+        case _ => ()
+      };
     }
-  }
-
-  def visit_1_1(node : T_Block, changed : AtomicBoolean) : Unit = node match {
-    case p_block(_,_,_) => visit_1_1_0(node, changed);
-  };
-  def visit_1_1_0(anchor : T_Block, changed : AtomicBoolean) : Unit = anchor match {
-    case p_block(v_b,v_ds,v_ss) => {
-
-      visit_5_1(v_ss, changed);
-      {
-        val newChanged = new AtomicBoolean(false);
-        do {
-          newChanged.set(false);
-          a_stmts_assigned_in.set(v_ss,new M__basic_19[ T_String,T_NamesLattice](t_String,t_NamesLattice).v__op_w5D(a_stmts_assigned_out.get(v_ss),a_outer_names.get(v_b)), newChanged);
-
-          visit_5_2(v_ss, newChanged);
-
-        } while(newChanged.get);
+    node match {
+      case p_program(v_p,v_b) => {
+        eval_Block_sharedinfo_all_names(
+          v_b
+        )
+        /* did not find any assignment for this fiber attribute p.G[Program]'shared_info$Xall_names -> instance_outward <- */
       }
-      a_decls_assigned_in.set(v_ds,a_stmts_assigned_out.get(v_ss), changed);
-
-      visit_2_1(v_ds, changed);
-
-      visit_5_3(v_ss, changed);
-    }
+      case _ => throw new RuntimeException("failed pattern matching: " + node)
+    };
+    evaluated_map_Program_sharedinfo_all_names.update(node.nodeNumber, true);
   }
 
-  def visit_2_1(node : T_Decls, changed : AtomicBoolean) : Unit = node match {
-    case p_no_decls(_) => visit_2_1_0(node, changed);
-    case p_xcons_decls(_,_,_) => visit_2_1_1(node, changed);
-  };
-  def visit_2_1_0(anchor : T_Decls, changed : AtomicBoolean) : Unit = anchor match {
-    case p_no_decls(v_2) => {
+  val evaluated_map_Program_sharedinfo_msgs = scala.collection.mutable.Map[Int, Boolean]()
+
+  def eval_Program_sharedinfo_msgs(node: T_Program)(implicit isInsideFixedPoint: Boolean, changed: AtomicBoolean): Unit = {
+    if (!isInsideFixedPoint) {
+      evaluated_map_Program_sharedinfo_msgs.getOrElse(node.nodeNumber, false) match {
+        case true => return ()
+        case _ => ()
+      };
     }
-  }
-  def visit_2_1_1(anchor : T_Decls, changed : AtomicBoolean) : Unit = anchor match {
-    case p_xcons_decls(v_ds0,v_ds1,v_d) => {
-      a_decls_assigned_in.set(v_ds1,a_decls_assigned_in.get(v_ds0), changed);
-
-      visit_2_1(v_ds1, changed);
-      a_decl_assigned_in.set(v_d,a_decls_assigned_in.get(v_ds0), changed);
-
-      visit_3_1(v_d, changed);
-    }
-  }
-
-  def visit_3_1(node : T_Decl, changed : AtomicBoolean) : Unit = node match {
-    case p_decl(_,_,_) => visit_3_1_0(node, changed);
-  };
-  def visit_3_1_0(anchor : T_Decl, changed : AtomicBoolean) : Unit = anchor match {
-    case p_decl(v_d,v_id,v_ty) => {
-
-      visit_4_1(v_ty, changed);
-      if (v_not(new M__basic_14[ T_String,T_NamesLattice](t_String,t_NamesLattice).v_in(v_id,a_decl_assigned_in.get(v_d)))) {
-        a_all_names.set(t_Names.v_single(v_id));
-        a_msgs.set(t_Messages.v_single(new M__basic_18[ T_String](t_String).v__op_ss(v_id," was not 'assigned.'")));
-      } else {
-        a_all_names.set(t_Names.v_single(v_id));
+    node match {
+      case p_program(v_p,v_b) => {
+        eval_Block_sharedinfo_msgs(
+          v_b,
+          t_Names.v_none()
+        )
+        /* did not find any assignment for this fiber attribute p.G[Program]'shared_info$Xmsgs -> instance_outward <- */
       }
-    }
+      case _ => throw new RuntimeException("failed pattern matching: " + node)
+    };
+    evaluated_map_Program_sharedinfo_msgs.update(node.nodeNumber, true);
   }
 
-  def visit_4_1(node : T_Type, changed : AtomicBoolean) : Unit = node match {
-    case p_integer_type(_) => visit_4_1_0(node, changed);
-    case p_string_type(_) => visit_4_1_1(node, changed);
-  };
-  def visit_4_1_0(anchor : T_Type, changed : AtomicBoolean) : Unit = anchor match {
-    case p_integer_type(v_t) => {
-    }
-  }
-  def visit_4_1_1(anchor : T_Type, changed : AtomicBoolean) : Unit = anchor match {
-    case p_string_type(v_t) => {
-    }
-  }
+  val evaluated_map_Block_sharedinfo_all_names = scala.collection.mutable.Map[Int, Boolean]()
 
-  def visit_5_1(node : T_Stmts, changed : AtomicBoolean) : Unit = node match {
-    case p_no_stmts(_) => visit_5_1_0(node, changed);
-    case p_xcons_stmts(_,_,_) => visit_5_1_1(node, changed);
-  };
-  def visit_5_2(node : T_Stmts, changed : AtomicBoolean) : Unit = node match {
-    case p_no_stmts(_) => visit_5_2_0(node, changed);
-    case p_xcons_stmts(_,_,_) => visit_5_2_1(node, changed);
-  };
-  def visit_5_3(node : T_Stmts, changed : AtomicBoolean) : Unit = node match {
-    case p_no_stmts(_) => visit_5_3_0(node, changed);
-    case p_xcons_stmts(_,_,_) => visit_5_3_1(node, changed);
-  };
-  def visit_5_1_0(anchor : T_Stmts, changed : AtomicBoolean) : Unit = anchor match {
-    case p_no_stmts(v_ss) => {
+  def eval_Block_sharedinfo_all_names(node: T_Block)(implicit isInsideFixedPoint: Boolean, changed: AtomicBoolean): Unit = {
+    if (!isInsideFixedPoint) {
+      evaluated_map_Block_sharedinfo_all_names.getOrElse(node.nodeNumber, false) match {
+        case true => return ()
+        case _ => ()
+      };
     }
-  }
-  def visit_5_2_0(anchor : T_Stmts, changed : AtomicBoolean) : Unit = anchor match {
-    case p_no_stmts(v_ss) => {
-      a_stmts_assigned_out.set(v_ss,a_stmts_assigned_in.get(v_ss), changed);
-    }
-  }
-  def visit_5_3_0(anchor : T_Stmts, changed : AtomicBoolean) : Unit = anchor match {
-    case p_no_stmts(v_ss) => {
-    }
-  }
-  def visit_5_1_1(anchor : T_Stmts, changed : AtomicBoolean) : Unit = anchor match {
-    case p_xcons_stmts(v_ss0,v_ss1,v_s) => {
-
-      visit_5_1(v_ss1, changed);
-
-      visit_6_1(v_s, changed);
-    }
-  }
-  def visit_5_2_1(anchor : T_Stmts, changed : AtomicBoolean) : Unit = anchor match {
-    case p_xcons_stmts(v_ss0,v_ss1,v_s) => {
-      a_stmts_assigned_in.set(v_ss1,a_stmts_assigned_in.get(v_ss0), changed);
-
-      visit_5_2(v_ss1, changed);
-      a_stmt_assigned_in.set(v_s,a_stmts_assigned_out.get(v_ss1), changed);
-
-      visit_6_2(v_s, changed);
-      a_stmts_assigned_out.set(v_ss0,a_stmt_assigned_out.get(v_s), changed);
-    }
-  }
-  def visit_5_3_1(anchor : T_Stmts, changed : AtomicBoolean) : Unit = anchor match {
-    case p_xcons_stmts(v_ss0,v_ss1,v_s) => {
-
-      visit_5_3(v_ss1, changed);
-
-      visit_6_3(v_s, changed);
-    }
-  }
-
-  def visit_6_1(node : T_Stmt, changed : AtomicBoolean) : Unit = node match {
-    case p_block_stmt(_,_) => visit_6_1_0(node, changed);
-    case p_assign_stmt(_,_,_) => visit_6_1_1(node, changed);
-  };
-  def visit_6_2(node : T_Stmt, changed : AtomicBoolean) : Unit = node match {
-    case p_block_stmt(_,_) => visit_6_2_0(node, changed);
-    case p_assign_stmt(_,_,_) => visit_6_2_1(node, changed);
-  };
-  def visit_6_3(node : T_Stmt, changed : AtomicBoolean) : Unit = node match {
-    case p_block_stmt(_,_) => visit_6_3_0(node, changed);
-    case p_assign_stmt(_,_,_) => visit_6_3_1(node, changed);
-  };
-  def visit_6_1_0(anchor : T_Stmt, changed : AtomicBoolean) : Unit = anchor match {
-    case p_block_stmt(v_s,v_b) => {
-    }
-  }
-  def visit_6_2_0(anchor : T_Stmt, changed : AtomicBoolean) : Unit = anchor match {
-    case p_block_stmt(v_s,v_b) => {
-      a_stmt_assigned_out.set(v_s,a_stmt_assigned_in.get(v_s), changed);
-    }
-  }
-  def visit_6_3_0(anchor : T_Stmt, changed : AtomicBoolean) : Unit = anchor match {
-    case p_block_stmt(v_s,v_b) => {
-      a_outer_names.set(v_b,a_stmt_assigned_in.get(v_s));
-
-      visit_1_1(v_b, changed);
-    }
-  }
-  def visit_6_1_1(anchor : T_Stmt, changed : AtomicBoolean) : Unit = anchor match {
-    case p_assign_stmt(v_s,v_e1,v_e2) => {
-
-      visit_7_1(v_e1, changed);
-
-      visit_7_1(v_e2, changed);
-    }
-  }
-  def visit_6_2_1(anchor : T_Stmt, changed : AtomicBoolean) : Unit = anchor match {
-    case p_assign_stmt(v_s,v_e1,v_e2) => {
-      if (new M__basic_3[ T_Names](t_Names).v__op_z0(a_names_used.get(v_e2),a_stmt_assigned_in.get(v_s))) {
-        a1_out.set(anchor,a_names_used.get(v_e1), changed);
-        a_stmt_assigned_out.set(v_s,a1_out.get(anchor), changed);
-      } else {
-        a1_out.set(anchor,a_stmt_assigned_in.get(v_s), changed);
-        a_stmt_assigned_out.set(v_s,a1_out.get(anchor), changed);
+    node match {
+      case p_block(v_b,v_ds,v_ss) => {
+        eval_Stmts_sharedinfo_all_names(
+          v_ss
+        )
+        eval_Decls_sharedinfo_all_names(
+          v_ds
+        )
+        /* did not find any assignment for this fiber attribute b.G[Block]'shared_info$Xall_names -> instance_outward <- */
       }
-    }
+      case _ => throw new RuntimeException("failed pattern matching: " + node)
+    };
+    evaluated_map_Block_sharedinfo_all_names.update(node.nodeNumber, true);
   }
-  def visit_6_3_1(anchor : T_Stmt, changed : AtomicBoolean) : Unit = anchor match {
-    case p_assign_stmt(v_s,v_e1,v_e2) => {
-      {
-        val newChanged = new AtomicBoolean(false);
-        do {
-          newChanged.set(false);
-          if (new M__basic_3[ T_Names](t_Names).v__op_z0(a_names_used.get(v_e2),a_stmt_assigned_in.get(v_s))) {
-          } else {
-          }
 
-        } while(newChanged.get);
+  val evaluated_map_Block_sharedinfo_msgs = scala.collection.mutable.Map[Int, Boolean]()
+
+  def eval_Block_sharedinfo_msgs(node: T_Block,
+                                 v_outer_names: T_Names)(implicit isInsideFixedPoint: Boolean, changed: AtomicBoolean): Unit = {
+    if (!isInsideFixedPoint) {
+      evaluated_map_Block_sharedinfo_msgs.getOrElse(node.nodeNumber, false) match {
+        case true => return ()
+        case _ => ()
+      };
+    }
+    node match {
+      case p_block(v_b,v_ds,v_ss) => {
+        eval_Stmts_sharedinfo_msgs(
+          v_ss,
+          eval_Stmts_stmts_assigned_out(
+            v_ss,
+            new M__basic_19[ T_String,T_NamesLattice](t_String,t_NamesLattice).v__op_w5D(/* circular dependency detected for ss.stmts_assigned_out, dumping as attribute access */ a_stmts_assigned_out.get(v_ss),v_outer_names)
+          ),
+          new M__basic_19[ T_String,T_NamesLattice](t_String,t_NamesLattice).v__op_w5D(/* circular dependency detected for ss.stmts_assigned_out, dumping as attribute access */ a_stmts_assigned_out.get(v_ss),v_outer_names)
+        )
+        eval_Decls_sharedinfo_msgs(
+          v_ds,
+          eval_Stmts_stmts_assigned_out(
+            v_ss,
+            new M__basic_19[ T_String,T_NamesLattice](t_String,t_NamesLattice).v__op_w5D(/* circular dependency detected for ss.stmts_assigned_out, dumping as attribute access */ a_stmts_assigned_out.get(v_ss),v_outer_names)
+          )
+        )
+        /* did not find any assignment for this fiber attribute b.G[Block]'shared_info$Xmsgs -> instance_outward <- */
       }
-    }
+      case _ => throw new RuntimeException("failed pattern matching: " + node)
+    };
+    evaluated_map_Block_sharedinfo_msgs.update(node.nodeNumber, true);
   }
 
-  def visit_7_1(node : T_Expr, changed : AtomicBoolean) : Unit = node match {
-    case p_intconstant(_,_) => visit_7_1_0(node, changed);
-    case p_strconstant(_,_) => visit_7_1_1(node, changed);
-    case p_variable(_,_) => visit_7_1_2(node, changed);
-  };
-  def visit_7_1_0(anchor : T_Expr, changed : AtomicBoolean) : Unit = anchor match {
-    case p_intconstant(v_e,v_0) => {
-      a_names_used.set(v_e,t_Names.v_none());
+  val evaluated_map_Decls_sharedinfo_all_names = scala.collection.mutable.Map[Int, Boolean]()
+
+  def eval_Decls_sharedinfo_all_names(node: T_Decls)(implicit isInsideFixedPoint: Boolean, changed: AtomicBoolean): Unit = {
+    if (!isInsideFixedPoint) {
+      evaluated_map_Decls_sharedinfo_all_names.getOrElse(node.nodeNumber, false) match {
+        case true => return ()
+        case _ => ()
+      };
     }
-  }
-  def visit_7_1_1(anchor : T_Expr, changed : AtomicBoolean) : Unit = anchor match {
-    case p_strconstant(v_e,v_0) => {
-      a_names_used.set(v_e,t_Names.v_none());
-    }
-  }
-  def visit_7_1_2(anchor : T_Expr, changed : AtomicBoolean) : Unit = anchor match {
-    case p_variable(v_e,v_id) => {
-      a_names_used.set(v_e,t_Names.v_single(v_id));
-    }
+    node match {
+      case p_no_decls(v_2) => {
+        /* did not find any assignment for this fiber attribute _.G[Decls]'shared_info$Xall_names -> instance_outward <- */
+      }
+      case p_xcons_decls(v_ds0,v_ds1,v_d) => {
+        eval_Decl_sharedinfo_all_names(
+          v_d
+        )
+        eval_Decls_sharedinfo_all_names(
+          v_ds1
+        )
+        /* did not find any assignment for this fiber attribute ds0.G[Decls]'shared_info$Xall_names -> instance_outward <- */
+      }
+      case _ => throw new RuntimeException("failed pattern matching: " + node)
+    };
+    evaluated_map_Decls_sharedinfo_all_names.update(node.nodeNumber, true);
   }
 
-  def visit() : Unit = {
-    val roots = t_Program.nodes;
-    for (root <- roots) {
-      visit_0_1(root, new AtomicBoolean(false));
+  val evaluated_map_Decls_sharedinfo_msgs = scala.collection.mutable.Map[Int, Boolean]()
+
+  def eval_Decls_sharedinfo_msgs(node: T_Decls,
+                                 v_decls_assigned_in: T_NamesLattice)(implicit isInsideFixedPoint: Boolean, changed: AtomicBoolean): Unit = {
+    if (!isInsideFixedPoint) {
+      evaluated_map_Decls_sharedinfo_msgs.getOrElse(node.nodeNumber, false) match {
+        case true => return ()
+        case _ => ()
+      };
     }
+    node match {
+      case p_no_decls(v_2) => {
+        /* did not find any assignment for this fiber attribute _.G[Decls]'shared_info$Xmsgs -> instance_outward <- */
+      }
+      case p_xcons_decls(v_ds0,v_ds1,v_d) => {
+        eval_Decl_sharedinfo_msgs(
+          v_d,
+          v_decls_assigned_in
+        )
+        eval_Decls_sharedinfo_msgs(
+          v_ds1,
+          v_decls_assigned_in
+        )
+        /* did not find any assignment for this fiber attribute ds0.G[Decls]'shared_info$Xmsgs -> instance_outward <- */
+      }
+      case _ => throw new RuntimeException("failed pattern matching: " + node)
+    };
+    evaluated_map_Decls_sharedinfo_msgs.update(node.nodeNumber, true);
   }
+
+  val evaluated_map_Decl_sharedinfo_all_names = scala.collection.mutable.Map[Int, Boolean]()
+
+  def eval_Decl_sharedinfo_all_names(node: T_Decl)(implicit isInsideFixedPoint: Boolean, changed: AtomicBoolean): Unit = {
+    if (!isInsideFixedPoint) {
+      evaluated_map_Decl_sharedinfo_all_names.getOrElse(node.nodeNumber, false) match {
+        case true => return ()
+        case _ => ()
+      };
+    }
+    node match {
+      case p_decl(v_d,v_id,v_ty) => {
+        a_all_names.set(t_Names.v_single(v_id))
+      }
+      case _ => throw new RuntimeException("failed pattern matching: " + node)
+    };
+    evaluated_map_Decl_sharedinfo_all_names.update(node.nodeNumber, true);
+  }
+
+  val evaluated_map_Decl_sharedinfo_msgs = scala.collection.mutable.Map[Int, Boolean]()
+
+  def eval_Decl_sharedinfo_msgs(node: T_Decl,
+                                v_decl_assigned_in: T_NamesLattice)(implicit isInsideFixedPoint: Boolean, changed: AtomicBoolean): Unit = {
+    if (!isInsideFixedPoint) {
+      evaluated_map_Decl_sharedinfo_msgs.getOrElse(node.nodeNumber, false) match {
+        case true => return ()
+        case _ => ()
+      };
+    }
+    node match {
+      case p_decl(v_d,v_id,v_ty) => {
+        if (v_not(new M__basic_14[ T_String,T_NamesLattice](t_String,t_NamesLattice).v_in(v_id,v_decl_assigned_in))) {
+          a_msgs.set(t_Messages.v_single(new M__basic_18[ T_String](t_String).v__op_ss(v_id," was not 'assigned.'")))
+        } else {
+          /* did not find any assignment for this fiber attribute d.G[Decl]'shared_info$Xmsgs -> instance_outward <- */
+        }
+      }
+      case _ => throw new RuntimeException("failed pattern matching: " + node)
+    };
+    evaluated_map_Decl_sharedinfo_msgs.update(node.nodeNumber, true);
+  }
+
+  val evaluated_map_Stmts_sharedinfo_all_names = scala.collection.mutable.Map[Int, Boolean]()
+
+  def eval_Stmts_sharedinfo_all_names(node: T_Stmts)(implicit isInsideFixedPoint: Boolean, changed: AtomicBoolean): Unit = {
+    if (!isInsideFixedPoint) {
+      evaluated_map_Stmts_sharedinfo_all_names.getOrElse(node.nodeNumber, false) match {
+        case true => return ()
+        case _ => ()
+      };
+    }
+    node match {
+      case p_no_stmts(v_ss) => {
+        /* did not find any assignment for this fiber attribute ss.G[Stmts]'shared_info$Xall_names -> instance_outward <- */
+      }
+      case p_xcons_stmts(v_ss0,v_ss1,v_s) => {
+        eval_Stmt_sharedinfo_all_names(
+          v_s
+        )
+        eval_Stmts_sharedinfo_all_names(
+          v_ss1
+        )
+        /* did not find any assignment for this fiber attribute ss0.G[Stmts]'shared_info$Xall_names -> instance_outward <- */
+      }
+      case _ => throw new RuntimeException("failed pattern matching: " + node)
+    };
+    evaluated_map_Stmts_sharedinfo_all_names.update(node.nodeNumber, true);
+  }
+
+  val evaluated_map_Stmts_sharedinfo_msgs = scala.collection.mutable.Map[Int, Boolean]()
+
+  def eval_Stmts_sharedinfo_msgs(node: T_Stmts,
+                                 v_stmts_assigned_out: T_NamesLattice,
+                                 v_stmts_assigned_in: T_NamesLattice)(implicit isInsideFixedPoint: Boolean, changed: AtomicBoolean): Unit = {
+    if (!isInsideFixedPoint) {
+      evaluated_map_Stmts_sharedinfo_msgs.getOrElse(node.nodeNumber, false) match {
+        case true => return ()
+        case _ => ()
+      };
+    }
+    node match {
+      case p_no_stmts(v_ss) => {
+        /* did not find any assignment for this fiber attribute ss.G[Stmts]'shared_info$Xmsgs -> instance_outward <- */
+      }
+      case p_xcons_stmts(v_ss0,v_ss1,v_s) => {
+        eval_Stmt_sharedinfo_msgs(
+          v_s,
+          eval_Stmt_stmt_assigned_out(
+            v_s,
+            eval_Stmts_stmts_assigned_out(
+              v_ss1,
+              v_stmts_assigned_in
+            )
+          ),
+          /* circular dependency detected for ss1.stmts_assigned_out, dumping as attribute access */ a_stmts_assigned_out.get(v_ss1)
+        )
+        eval_Stmts_sharedinfo_msgs(
+          v_ss1,
+          eval_Stmts_stmts_assigned_out(
+            v_ss1,
+            v_stmts_assigned_in
+          ),
+          v_stmts_assigned_in
+        )
+        /* did not find any assignment for this fiber attribute ss0.G[Stmts]'shared_info$Xmsgs -> instance_outward <- */
+      }
+      case _ => throw new RuntimeException("failed pattern matching: " + node)
+    };
+    evaluated_map_Stmts_sharedinfo_msgs.update(node.nodeNumber, true);
+  }
+
+  def eval_Stmts_stmts_assigned_out(node: T_Stmts,
+                                    v_stmts_assigned_in: T_NamesLattice)(implicit isInsideFixedPoint: Boolean, changed: AtomicBoolean): T_NamesLattice = {
+    if (!isInsideFixedPoint) {
+      a_stmts_assigned_out.checkNode(node).status match {
+        case Evaluation.ASSIGNED => return a_stmts_assigned_out.get(node)
+        case _ => ()
+      };
+    }
+    val result = node match {
+      case p_no_stmts(v_ss) => {
+        {
+          val prevIsInsideFixedPoint3 = isInsideFixedPoint;
+          val prevChanged3 = changed;
+          val newChanged3 = new AtomicBoolean(false);
+          do {
+            newChanged3.set(false);
+            implicit val isInsideFixedPoint: Boolean = true;
+            implicit val changed: AtomicBoolean = newChanged3;
+            a_stmts_assigned_out.assign(node, v_stmts_assigned_in, changed);
+          } while (newChanged3.get && !prevIsInsideFixedPoint3)
+          prevChanged3.compareAndSet(false, newChanged3.get);
+          a_stmts_assigned_out.get(node)
+        }
+      }
+      case p_xcons_stmts(v_ss0,v_ss1,v_s) => {
+        {
+          val prevIsInsideFixedPoint3 = isInsideFixedPoint;
+          val prevChanged3 = changed;
+          val newChanged3 = new AtomicBoolean(false);
+          do {
+            newChanged3.set(false);
+            implicit val isInsideFixedPoint: Boolean = true;
+            implicit val changed: AtomicBoolean = newChanged3;
+            a_stmts_assigned_out.assign(node, eval_Stmt_stmt_assigned_out(
+              v_s,
+              eval_Stmts_stmts_assigned_out(
+                v_ss1,
+                v_stmts_assigned_in
+              )
+            ), changed);
+          } while (newChanged3.get && !prevIsInsideFixedPoint3)
+          prevChanged3.compareAndSet(false, newChanged3.get);
+          a_stmts_assigned_out.get(node)
+        }
+      }
+      case _ => throw new RuntimeException("failed pattern matching: " + node)
+    };
+    a_stmts_assigned_out.assign(node, result);
+    a_stmts_assigned_out.get(node);
+    result
+  }
+
+  val evaluated_map_Stmt_sharedinfo_all_names = scala.collection.mutable.Map[Int, Boolean]()
+
+  def eval_Stmt_sharedinfo_all_names(node: T_Stmt)(implicit isInsideFixedPoint: Boolean, changed: AtomicBoolean): Unit = {
+    if (!isInsideFixedPoint) {
+      evaluated_map_Stmt_sharedinfo_all_names.getOrElse(node.nodeNumber, false) match {
+        case true => return ()
+        case _ => ()
+      };
+    }
+    node match {
+      case p_block_stmt(v_s,v_b) => {
+        eval_Block_sharedinfo_all_names(
+          v_b
+        )
+        /* did not find any assignment for this fiber attribute s.G[Stmt]'shared_info$Xall_names -> instance_outward <- */
+      }
+      case p_assign_stmt(v_s,v_e1,v_e2) => {
+        /* did not find any assignment for this fiber attribute s.G[Stmt]'shared_info$Xall_names -> instance_outward <- */
+      }
+      case _ => throw new RuntimeException("failed pattern matching: " + node)
+    };
+    evaluated_map_Stmt_sharedinfo_all_names.update(node.nodeNumber, true);
+  }
+
+  val evaluated_map_Stmt_sharedinfo_msgs = scala.collection.mutable.Map[Int, Boolean]()
+
+  def eval_Stmt_sharedinfo_msgs(node: T_Stmt,
+                                v_stmt_assigned_out: T_NamesLattice,
+                                v_stmt_assigned_in: T_NamesLattice)(implicit isInsideFixedPoint: Boolean, changed: AtomicBoolean): Unit = {
+    if (!isInsideFixedPoint) {
+      evaluated_map_Stmt_sharedinfo_msgs.getOrElse(node.nodeNumber, false) match {
+        case true => return ()
+        case _ => ()
+      };
+    }
+    node match {
+      case p_block_stmt(v_s,v_b) => {
+        eval_Block_sharedinfo_msgs(
+          v_b,
+          v_stmt_assigned_in
+        )
+        /* did not find any assignment for this fiber attribute s.G[Stmt]'shared_info$Xmsgs -> instance_outward <- */
+      }
+      case p_assign_stmt(v_s,v_e1,v_e2) => {
+        /* did not find any assignment for this fiber attribute s.G[Stmt]'shared_info$Xmsgs -> instance_outward <- */
+      }
+      case _ => throw new RuntimeException("failed pattern matching: " + node)
+    };
+    evaluated_map_Stmt_sharedinfo_msgs.update(node.nodeNumber, true);
+  }
+
+  def eval_Stmt_stmt_assigned_out(node: T_Stmt,
+                                  v_stmt_assigned_in: T_NamesLattice)(implicit isInsideFixedPoint: Boolean, changed: AtomicBoolean): T_NamesLattice = {
+    if (!isInsideFixedPoint) {
+      a_stmt_assigned_out.checkNode(node).status match {
+        case Evaluation.ASSIGNED => return a_stmt_assigned_out.get(node)
+        case _ => ()
+      };
+    }
+    val result = node match {
+      case p_block_stmt(v_s,v_b) => {
+        {
+          val prevIsInsideFixedPoint3 = isInsideFixedPoint;
+          val prevChanged3 = changed;
+          val newChanged3 = new AtomicBoolean(false);
+          do {
+            newChanged3.set(false);
+            implicit val isInsideFixedPoint: Boolean = true;
+            implicit val changed: AtomicBoolean = newChanged3;
+            a_stmt_assigned_out.assign(node, v_stmt_assigned_in, changed);
+          } while (newChanged3.get && !prevIsInsideFixedPoint3)
+          prevChanged3.compareAndSet(false, newChanged3.get);
+          a_stmt_assigned_out.get(node)
+        }
+      }
+      case p_assign_stmt(v_s,v_e1,v_e2) => {
+        {
+          val prevIsInsideFixedPoint3 = isInsideFixedPoint;
+          val prevChanged3 = changed;
+          val newChanged3 = new AtomicBoolean(false);
+          do {
+            newChanged3.set(false);
+            implicit val isInsideFixedPoint: Boolean = true;
+            implicit val changed: AtomicBoolean = newChanged3;
+            a_stmt_assigned_out.assign(node, if (new M__basic_3[ T_Names](t_Names).v__op_z0(eval_Expr_names_used(
+              v_e2
+            ),v_stmt_assigned_in)) {
+              eval_a1_NamesLattice_out(
+                node,
+                /* circular dependency detected for s.stmt_assigned_out, dumping as attribute access */ a_stmt_assigned_out.get(v_s),
+                v_stmt_assigned_in,
+                eval_Expr_names_used(
+                  v_e1
+                ),
+                eval_Expr_names_used(
+                  v_e2
+                )
+              )
+            } else {
+              eval_a1_NamesLattice_out(
+                node,
+                /* circular dependency detected for s.stmt_assigned_out, dumping as attribute access */ a_stmt_assigned_out.get(v_s),
+                v_stmt_assigned_in,
+                eval_Expr_names_used(
+                  v_e1
+                ),
+                eval_Expr_names_used(
+                  v_e2
+                )
+              )
+            }, changed);
+          } while (newChanged3.get && !prevIsInsideFixedPoint3)
+          prevChanged3.compareAndSet(false, newChanged3.get);
+          a_stmt_assigned_out.get(node)
+        }
+      }
+      case _ => throw new RuntimeException("failed pattern matching: " + node)
+    };
+    a_stmt_assigned_out.assign(node, result);
+    a_stmt_assigned_out.get(node);
+    result
+  }
+
+  def eval_Expr_names_used(node: T_Expr)(implicit isInsideFixedPoint: Boolean, changed: AtomicBoolean): T_Names = {
+    if (!isInsideFixedPoint) {
+      a_names_used.checkNode(node).status match {
+        case Evaluation.ASSIGNED => return a_names_used.get(node)
+        case _ => ()
+      };
+    }
+    val result = node match {
+      case p_intconstant(v_e,v_0) => {
+        t_Names.v_none()
+      }
+      case p_strconstant(v_e,v_0) => {
+        t_Names.v_none()
+      }
+      case p_variable(v_e,v_id) => {
+        t_Names.v_single(v_id)
+      }
+      case _ => throw new RuntimeException("failed pattern matching: " + node)
+    };
+    a_names_used.assign(node, result);
+    a_names_used.get(node);
+    result
+  }
+
+  def eval_a1_NamesLattice_out(node: T_Stmt,
+                               v_s_stmt_assigned_out: T_NamesLattice,
+                               v_s_stmt_assigned_in: T_NamesLattice,
+                               v_e1_names_used: T_Names,
+                               v_e2_names_used: T_Names)(implicit isInsideFixedPoint: Boolean, changed: AtomicBoolean): T_NamesLattice = {
+    if (!isInsideFixedPoint) {
+      a1_out.checkNode(node).status match {
+        case Evaluation.ASSIGNED => return a1_out.get(node)
+        case _ => ()
+      };
+    }
+    val result = node match {
+      case p_assign_stmt(v_s,v_e1,v_e2) => {
+        {
+          val prevIsInsideFixedPoint10 = isInsideFixedPoint;
+          val prevChanged10 = changed;
+          val newChanged10 = new AtomicBoolean(false);
+          do {
+            newChanged10.set(false);
+            implicit val isInsideFixedPoint: Boolean = true;
+            implicit val changed: AtomicBoolean = newChanged10;
+            a1_out.assign(node, if (new M__basic_3[ T_Names](t_Names).v__op_z0(eval_Expr_names_used(
+              v_e2
+            ),v_s_stmt_assigned_in)) {
+              t_NamesLattice.v_combine(v_s_stmt_assigned_in, eval_Expr_names_used(
+                v_e1
+              ))
+            } else {
+              v_s_stmt_assigned_in
+            }, changed);
+          } while (newChanged10.get && !prevIsInsideFixedPoint10)
+          prevChanged10.compareAndSet(false, newChanged10.get);
+          a1_out.get(node)
+        }
+      }
+      case _ => throw new RuntimeException("failed pattern matching: " + node)
+    };
+    a1_out.assign(node, result);
+    a1_out.get(node);
+    result
+  }
+
   override def finish() : Unit = {
-    visit();
-    t_Names.finish();
-    t_NamesLattice.finish();
-    t_Messages.finish();
+    implicit val isInsideFixedPoint: Boolean = false;
+    implicit val changed: AtomicBoolean = new AtomicBoolean(false);
+    for (root <- t_Program.nodes) {
+      eval_Program_sharedinfo_all_names(root);
+      eval_Program_sharedinfo_msgs(root);
+    }
     super.finish();
-  }
+  };
 }
 

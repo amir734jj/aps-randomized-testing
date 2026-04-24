@@ -3,12 +3,13 @@ import java.util.concurrent.TimeUnit
 
 object NestedCyclesDriver extends App {
 
-  def time[R](str: String, func: () => R): (Long, R) = {
+  private def time[R](str: String, func: () => R): (Double, R) = {
     val t0 = System.nanoTime()
     val re = func()
     val t1 = System.nanoTime()
-    val seconds = TimeUnit.SECONDS.convert(t1 - t0, TimeUnit.NANOSECONDS)
-    println(s"$str Elapsed time: " + seconds + " sec")
+
+    val seconds = (t1 - t0) / 1e9  // convert to seconds as Double
+    println(f"$str Elapsed time: $seconds%.1f sec")
 
     (seconds, re)
   }
@@ -18,7 +19,7 @@ object NestedCyclesDriver extends App {
 
     var m = Map[String, () => Any]()
     m = m + ("dynamic" -> (() => {
-      val (_, tree) = re(0)
+      val (_, tree) = re.head
       val dynamicResult = new M_NESTED_CYCLES_DYNAMIC("Dynamic", tree.asInstanceOf[M_SIMPLE]);
       dynamicResult.finish()
       dynamicResult.v_msgs.asInstanceOf[Any]
@@ -41,7 +42,7 @@ object NestedCyclesDriver extends App {
     m
   }
 
-  for (i <- 1.0 to 12 by 1.0) {
+  for (i <- 1.0 to 14 by 1.0) {
     val depth = i.toInt
     println("AST Depth: " + depth)
 
@@ -50,10 +51,6 @@ object NestedCyclesDriver extends App {
     val (_, staticRe) = time("Static", result("static"))
     val (_, dynamicRe) = time("Dynamic", result("dynamic"))
     val (_, synthRe) = time("Synth", result("synth"))
-
-    println(s"Static: $staticRe")
-    println(s"Dynamic: $dynamicRe")
-    println(s"Synth: $synthRe")
 
     if (staticRe.equals(synthRe)) {
       println("Static+Synth result matching")

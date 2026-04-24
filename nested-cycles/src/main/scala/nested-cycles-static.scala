@@ -378,6 +378,7 @@ class M_NESTED_CYCLES_STATIC[T_T](name : String,val t_T : C_TYPE[T_T] with C_SIM
   def visit_6_2_1(anchor : T_Stmt, changed : AtomicBoolean) : Unit = anchor match {
     case p_assign_stmt(v_s,v_e1,v_e2) => {
       if (new M__basic_3[ T_Names](t_Names).v__op_z0(a_names_used.get(v_e2),a_stmt_assigned_in.get(v_s))) {
+        a1_out.set(anchor,a_stmt_assigned_in.get(v_s), changed);
         a1_out.set(anchor,a_names_used.get(v_e1), changed);
         a_stmt_assigned_out.set(v_s,a1_out.get(anchor), changed);
       } else {
